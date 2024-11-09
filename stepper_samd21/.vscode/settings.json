@@ -1,0 +1,10 @@
+{
+//    "C_Cpp.default.compileCommands": "/home/alban/zephyr_workspace/button_samd21/build/compile_commands.json",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "C_Cpp.default.includePath": [
+        "~/zephyr_workspace/zephyr/include"
+    ],
+    "C_Cpp.default.compilerPath": "~/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
+    "C_Cpp.loggingLevel": "Information",
+}
