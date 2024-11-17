@@ -28,3 +28,14 @@ ULN2003 {IN1,IN2,IN3,IN4} <-> GPIO {PB00,PB01,PB02,PB03}
 Contact fin de course <-> GPIO PB04
 
 Pour compiler le programme, on tape ***west build -p always -b samd21_xpro*** 
+
+- **spi_shell_nrf52**
+
+Ce projet testé sur carte d'évaluation nrf52840DK (PCA10056), permet de tester des commandes spi via une console shell. cette carte dispose d'un header de type "arduino uno" avec une interface spi dédiée sur les pins D11,D12,D13 (voir pinout arduino uno). la pin choisie pour le chip-select est D7. ce projet devrait pouvoir directement fonctionner sur toute carte munie du header arduino (ST nucleo, etc ...)
+
+Dans cet exemple on crée une commande "spi" et deux sous-commandes "conf" et "trx", qui permettent de configurer l'interface et d'envoyer et recevoir des octets.
+
+La configuration du port spi inclut la définition de la gpio qui sert pour le chip-select.
+
+pour compiler le programme, on tape ***west build -p always -b nrf52840dk/nrf52840***
+

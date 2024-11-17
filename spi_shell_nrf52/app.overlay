@@ -1,0 +1,9 @@
+&arduino_spi {
+  	cs-gpios = <&arduino_header 13 GPIO_ACTIVE_LOW>; /* D7 */
+
+};
+/ {
+	aliases {
+		arduinospi = &arduino_spi;
+	};
+};
