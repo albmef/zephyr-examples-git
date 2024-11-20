@@ -1,12 +1,10 @@
 / {
-    steppers {
-        compatible = "gpio-steppers";
-        motor0: motor_0 {
-            gpios = <&portb 0 GPIO_ACTIVE_HIGH>,  /* IN1 */
-                    <&portb 1 GPIO_ACTIVE_HIGH>,  /* IN2 */
-                    <&portb 2 GPIO_ACTIVE_HIGH>,  /* IN3 */
-                    <&portb 3 GPIO_ACTIVE_HIGH>;  /* IN4 */
-        };
+    motor0: motor_0 {
+        compatible = "zephyr,gpio-stepper";
+        gpios = <&portb 0 GPIO_ACTIVE_HIGH>,  /* IN1 */
+                <&portb 1 GPIO_ACTIVE_HIGH>,  /* IN2 */
+                <&portb 2 GPIO_ACTIVE_HIGH>,  /* IN3 */
+                <&portb 3 GPIO_ACTIVE_HIGH>;  /* IN4 */
     };
 	buttons {
 		compatible = "gpio-keys";

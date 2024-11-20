@@ -46,16 +46,16 @@ LOG_MODULE_REGISTER(main);
 	si le noeud a un alias, on utilise la macro DT_ALIAS
 	s'il n'en a pas on utilise la macro DT_NODELABEL
 	par exemple DT_NODELABEL(motor0) va chercher le noeud appelé motor0
+
+TODO
 	...
-		steppers {
-			compatible = "gpio-steppers";
-			motor0: motor_0 {
-				gpios = <&portb 0 GPIO_ACTIVE_HIGH>,
-						<&portb 1 GPIO_ACTIVE_HIGH>,
-						<&portb 2 GPIO_ACTIVE_HIGH>,
-						<&portb 3 GPIO_ACTIVE_HIGH>;
-			};
-		};
+    motor0: motor_0 {
+        compatible = "zephyr,gpio-stepper";
+        gpios = <&portb 0 GPIO_ACTIVE_HIGH>,
+                <&portb 1 GPIO_ACTIVE_HIGH>,
+                <&portb 2 GPIO_ACTIVE_HIGH>,
+                <&portb 3 GPIO_ACTIVE_HIGH>;
+    };
 	...
 	si le noeud n'existe pas ou s'il n'est pas "okay", la compilation s'arrête sur une erreur
 	tous les symboles extraits du devicetree sont définis dans le fichier:
@@ -139,6 +139,23 @@ void button_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
 	k_work_reschedule(&debounce_work,K_MSEC(30));
+}
+
+/*
+	ceci est le callback appelé par le driver stepper génère un évènement.
+	si l'évènement correspond à "le moteur a fini son mouvement",
+	on active le signal qui bloque l'exécution de la boucle principale.
+	cette activation se fait avec k_poll_signal_raise. l'adresse du
+	signal est passée en paramètre du callback lors de l'initialisation.
+*/
+
+static void stepper_stop_cb(const struct device *dev,
+									const enum stepper_event event, void *user_data)
+{
+	if (event == STEPPER_EVENT_STEPS_COMPLETED){
+		k_poll_signal_raise((struct k_poll_signal *)user_data, 1);
+		LOG_DBG("signal raise");
+	}
 }
 
 
@@ -237,7 +254,7 @@ int main(void)
 		parfois donné en hertz dans les spécifications du moteur.
 	*/
 #if 0	//FULL STEP HIGH TORQUE
-	ret = stepper_set_micro_step_res(motor0_dev, STEPPER_FULL_STEP);
+	ret = stepper_set_micro_step_res(motor0_dev, STEPPER_MICRO_STEP_1);
 	if (ret < 0) {LOG_ERR("stepper set micro step");return 0;}
 
 	ret = stepper_set_max_velocity(motor0_dev, 250);
@@ -283,15 +300,22 @@ int main(void)
 		ici le signal est juste une sorte de flag, mis à 1 par l'émetteur et lu puis remis à zéro 
 		par le récepteur en attente du signal.
 	*/
-	struct k_poll_signal async_signal;
-    struct k_poll_event move_event;
+	static struct k_poll_signal stepper_stop_signal;
+	static struct k_poll_event stepper_stop_event;
 
 	/*
 		on initialise le signal, et on l'associe à un évèmenent système.
 		c'est obligatoire pour que le kernel puisse rendre la main au thread qui attend le signal.
 	*/
-	k_poll_signal_init(&async_signal);
-    k_poll_event_init(&move_event, K_POLL_TYPE_SIGNAL, K_POLL_MODE_NOTIFY_ONLY, &async_signal);
+	k_poll_signal_init(&stepper_stop_signal);
+    k_poll_event_init(&stepper_stop_event, K_POLL_TYPE_SIGNAL, K_POLL_MODE_NOTIFY_ONLY, &stepper_stop_signal);
+
+	/*
+		on initialise le callback qui sera appelé par le driver stepper pour signaler des évènements.
+		on passe en paramètre l'adresse du signal qui sera activé dans le callback pour débloquer la loop.
+	*/
+	ret = stepper_set_event_callback(motor0_dev, stepper_stop_cb, (void *)&stepper_stop_signal);
+	if (ret < 0) {LOG_ERR("stepper set event callback");return 0;}
 
 	/*
 		on entre dans la boucle infinie
@@ -305,16 +329,19 @@ int main(void)
 			les deux fonctions génèrement un signal asynchrone lorsque la position finale est atteinte
 		*/
 
-		// ret = stepper_move(motor0_dev, 1000, &async_signal);
+		// ret = stepper_move(motor0_dev, 1000);
 		// if (ret < 0) {LOG_ERR("stepper move");return 0;}
-		ret = stepper_set_target_position(motor0_dev, 1000, &async_signal);
+		ret = stepper_set_target_position(motor0_dev, 1000);
 		if (ret < 0) {LOG_ERR("stepper set target position");return 0;}
 
 		/*
 			le thread courant est suspendu ad vitam aeternam (timeout = K_FOREVER), 
 			et reprendra son exécution lorsque l'évènement signal sera émis.
+			il faut remettre à zéro le signal manuellement après l'interception
 		*/
-		k_poll(&move_event, 1, K_FOREVER);
+		k_poll(&stepper_stop_event, 1, K_FOREVER);
+		LOG_DBG("signal catch");
+		k_poll_signal_reset(&stepper_stop_signal);
 
 		/*
 			on lit et affiche la position absolue courante du moteur.
@@ -323,12 +350,14 @@ int main(void)
 		if (ret < 0) {LOG_ERR("stepper get actual position");return 0;}
 		LOG_DBG("position = %d", pos);
 
-		// ret = stepper_move(motor0_dev, -1000, &async_signal);
+		// ret = stepper_move(motor0_dev, -1000);
 		// if (ret < 0) {LOG_ERR("stepper move");return 0;}
-		ret = stepper_set_target_position(motor0_dev, -1000, &async_signal);
+		ret = stepper_set_target_position(motor0_dev, -1000);
 		if (ret < 0) {LOG_ERR("stepper set target position");return 0;}
 
-		k_poll(&move_event, 1, K_FOREVER);
+		k_poll(&stepper_stop_event, 1, K_FOREVER);
+		LOG_DBG("signal catch");
+		k_poll_signal_reset(&stepper_stop_signal);
 
 		ret = stepper_get_actual_position(motor0_dev, &pos);
 		if (ret < 0) {LOG_ERR("stepper get actual position");return 0;}
