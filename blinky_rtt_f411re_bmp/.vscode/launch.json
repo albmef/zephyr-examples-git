@@ -1,0 +1,52 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "BMP Launch RTT",
+            "type": "cortex-debug",
+            "request": "launch",
+            "executable": "${workspaceFolder}/build/zephyr/zephyr.elf",
+            "cwd": "${workspaceFolder}",
+            "servertype": "bmp",
+            "BMPGDBSerialPort": "/dev/ttyBmpGdb",
+            "interface": "swd",
+
+            /*
+                on peut choisir où commence la session de debug.
+                "__start" permet d'inspecter toute la phase d'initialisation.
+                "main" démarre directement l'application.
+            */
+            "runToEntryPoint": "main",
+            // "runToEntryPoint": "__start",
+
+            //  permet d'inspecter les commandes gdb dans la "debug console"
+            // "showDevDebugOutput": "raw",
+
+            /*
+                la config rttConfig ne fonctionne pas en l'état 
+                avec l'extension cortex-debug v1.12.1.
+                pour palier ce problème, j'ai ajouté une commande gdb "monitor rtt enable".
+                par défaut le buffer d'émission du RTT est placé au début de la RAM,
+                on peut la trouver dans le fichier zephyr_final.map
+                ...
+                0x0000000020000000                __rtt_buff_data_start = .
+                ...
+            */
+            // "rttConfig": {
+            //     "enabled": true,
+            //     "address": "auto",
+            // },
+            "postLaunchCommands": ["monitor rtt enable"],
+
+            /*
+                svd path fonctionne avec l'extension peripheral viewer
+                cela permet d'inspecter les registres du MCU dans la section XPERIPHERALS
+                de la fenêtre run & debug
+            */
+            "svdPath": "${workspaceFolder}/boards/arm/nucleo_f411re_bmp/support/STM32F411.svd",
+        }
+    ]
+}

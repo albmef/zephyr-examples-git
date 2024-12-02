@@ -1,2 +1,3 @@
 stepper_samd21/build/
 spi_shell_nrf52/build/
+blinky_rtt_f411re_bmp/build

@@ -1,0 +1,11 @@
+{
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "C_Cpp.default.includePath": [
+        "${userHome}/zephyr_workspace/zephyr/include"
+    ],
+    "C_Cpp.default.compilerPath": "~/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
+    "C_Cpp.loggingLevel": "Information",
+    "cortex-debug.armToolchainPath": "${userHome}/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/",
+    "cortex-debug.armToolchainPrefix": "arm-zephyr-eabi",
+}
