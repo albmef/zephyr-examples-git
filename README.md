@@ -104,4 +104,4 @@ Dans ce projet on pourra inspecter le registre ODR du périphérique GPIOA, dont
 
 #### compilation du projet
 
-Le projet peut être compilé avec la commande **west build -p always -b nucleo_f411re_bmp**, le fichier **prj.conf** contient les options **KConfig** nécessaires pour faciliter le debug.
+Le projet peut être compilé avec la commande ***west build -p always -b nucleo_f411re_bmp***, le fichier **prj.conf** contient les options **KConfig** nécessaires pour faciliter le debug.
